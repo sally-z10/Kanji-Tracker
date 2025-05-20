@@ -1,0 +1,409 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.main-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  height: 10vh; /* Matches top 1/10th to 1/8th of page height */
+}
+
+.hamburger-menu {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.search-bar {
+  flex-grow: 1;
+  margin: 0 20px;
+  max-width: 60%;
+}
+
+.search-bar input {
+  width: 80%;
+  padding: 5px;
+}
+
+.search-bar button {
+  padding: 5px 10px;
+}
+
+.refresh-button {
+  padding: 5px 10px;
+  font-size: 1rem;
+}
+
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.welcome-message {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 1vh 0 2vh 0; /* Positions it ~1/10th below header */
+  width: 40%; /* Matches 2/5th of page width in some sketches */
+  text-align: center;
+}
+
+.kanji-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.kanji-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid #000;
+  font-size: 2rem;
+  aspect-ratio: 1 / 1; /* Keeps boxes square */
+}
+
+@media (max-width: 768px) {
+  .kanji-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .kanji-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 200px;
+  height: 100%;
+  background-color: #e0e0e0;
+  padding: 20px;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  z-index: 1000;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 40px;
+}
+
+.sidebar li {
+  margin: 10px 0;
+}
+
+.sidebar a {
+  text-decoration: none;
+  color: #333;
+}
+
+/* Existing styles remain, adding/updating the following */
+.kanji-detail-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center everything */
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 100vh; /* Full height for centering */
+}
+
+.kanji-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px; /* Reduced gap between Kanji box and text */
+  width: 100%;
+}
+
+.kanji-header button {
+  align-self: flex-start;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  background-color: #f0f0f0;
+  border: none;
+  cursor: pointer;
+}
+
+.kanji-box-large {
+  border: 2px solid #000;
+  font-size: 5rem; /* Make it bigger */
+  padding: 20px;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.kanji-info {
+  text-align: center;
+  margin-bottom: 20px; /* Appropriate spacing */
+  width: 60%;
+}
+
+.readings {
+  margin-bottom: 10px;
+}
+
+.readings p {
+  margin: 5px 0; /* Stack vertically with appropriate spacing */
+}
+
+.kanji-info h2 {
+  font-size: 1.5rem;
+  margin-bottom: 5px;
+}
+
+.kanji-info p {
+  font-size: 1.2rem;
+  margin: 5px 0;
+}
+
+.vocab-section {
+  text-align: center;
+  width: 60%; /* Match sketch proportion */
+  margin-top: 20px; /* Move below text */
+}
+
+.vocab-input {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.vocab-input input {
+  padding: 5px;
+  width: 200px;
+  margin-right: 10px;
+}
+
+.vocab-input button {
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.vocab-section ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+.vocab-section li {
+  margin-bottom: 5px;
+  font-size: 1.1rem;
+}
+
+@media (min-width: 768px) {
+  .kanji-detail-page {
+    flex-direction: column; /* Force vertical stack */
+    justify-content: center;
+  }
+
+  .kanji-info {
+    margin-right: 0; /* No side-by-side */
+    flex: none;
+  }
+
+  .vocab-section {
+    flex: none;
+  }
+}
+
+/* Profile Page */
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 100vh;
+}
+
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.profile-header button {
+  align-self: flex-start;
+  padding: 5px 10px;
+  background-color: #f0f0f0;
+  border: none;
+  cursor: pointer;
+}
+
+.profile-header h1 {
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+.profile-info {
+  text-align: center;
+  width: 60%;
+}
+
+.profile-card {
+  border: 2px solid #000;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.profile-card h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.profile-card p {
+  font-size: 1.2rem;
+  margin: 5px 0;
+}
+
+.edit-profile-btn {
+  margin-top: 10px;
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* Word List Page */
+.word-list-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 100vh;
+}
+
+.word-list-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.word-list-header button {
+  align-self: flex-start;
+  padding: 5px 10px;
+  background-color: #f0f0f0;
+  border: none;
+  cursor: pointer;
+}
+
+.word-list-header h1 {
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+.word-list-section {
+  text-align: center;
+  width: 60%;
+}
+
+.word-list-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.word-list-section li {
+  font-size: 1.2rem;
+  margin: 5px 0;
+}
+
+/* How to Use Page */
+.how-to-use-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 100vh;
+}
+
+.how-to-use-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.how-to-use-header button {
+  align-self: flex-start;
+  padding: 5px 10px;
+  background-color: #f0f0f0;
+  border: none;
+  cursor: pointer;
+}
+
+.how-to-use-header h1 {
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+.how-to-use-section {
+  text-align: center;
+  width: 60%;
+}
+
+.how-to-use-section h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.how-to-use-section p {
+  font-size: 1.2rem;
+  margin: 5px 0;
+}
