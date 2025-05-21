@@ -3,30 +3,30 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../index.css';
 
-const LoginPage = () => {
-  const { login } = useAuth();
+const SignUpPage = () => {
+  const { signup } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = (e) => {
+  const handleSignUp = (e) => {
     e.preventDefault();
-    if (login(username, password)) {
+    if (signup(username, password)) {
       setError('');
-      navigate('/');
+      navigate('/login'); // Redirect to login after signup
     } else {
-      setError('Invalid username or password');
+      setError('Username already taken');
     }
   };
 
   return (
-    <div className="login-page">
-      <header className="login-header">
-        <h1>Login</h1>
+    <div className="signup-page">
+      <header className="signup-header">
+        <h1>Sign Up</h1>
       </header>
-      <section className="login-section">
-        <form onSubmit={handleLogin}>
+      <section className="signup-section">
+        <form onSubmit={handleSignUp}>
           <div>
             <input
               type="text"
@@ -46,14 +46,14 @@ const LoginPage = () => {
             />
           </div>
           {error && <p style={{ color: 'red' }}>{error}</p>}
-          <button type="submit" className="login-button">Login</button>
+          <button type="submit" className="signup-button">Sign Up</button>
         </form>
         <p>
-          Don't have an account? <Link to="/signup">Sign up</Link>
+          Already have an account? <Link to="/login">Login</Link>
         </p>
       </section>
     </div>
   );
 };
 
-export default LoginPage;
+export default SignUpPage;

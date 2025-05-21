@@ -5,17 +5,29 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
+  const [users, setUsers] = useState([
+    { username: 'user', password: 'pass' }, // Default user
+  ]);
 
-  // Mock credentials (for simplicity; replace with real auth logic later)
   const login = (user, pass) => {
-    const validUsername = 'user';
-    const validPassword = 'pass';
-    if (user === validUsername && pass === validPassword) {
+    const foundUser = users.find(
+      (u) => u.username === user && u.password === pass
+    );
+    if (foundUser) {
       setIsLoggedIn(true);
       setUsername(user);
       return true;
     }
     return false;
+  };
+
+  const signup = (user, pass) => {
+    // Check if username already exists
+    if (users.some((u) => u.username === user)) {
+      return false; // Username taken
+    }
+    setUsers([...users, { username: user, password: pass }]);
+    return true; // Signup successful
   };
 
   const logout = () => {
@@ -24,7 +36,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, username, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, username, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

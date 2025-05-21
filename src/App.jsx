@@ -8,6 +8,7 @@ import ProfilePage from './pages/ProfilePage';
 import WordListPage from './pages/WordListPage';
 import HowToUsePage from './pages/HowToUsePage';
 import LoginPage from './pages/LoginPage';
+import SignUpPage from './pages/SignUpPage';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Router>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignUpPage />} />
             <Route
               path="/"
               element={<RequireAuth><MainPage /></RequireAuth>}
@@ -43,9 +45,8 @@ function App() {
   );
 }
 
-// Private Route Component
 const RequireAuth = ({ children }) => {
-  const { isLoggedIn } = useAuth(); // Now properly imported
+  const { isLoggedIn } = useAuth();
   return isLoggedIn ? children : <Navigate to="/login" replace />;
 };
 
