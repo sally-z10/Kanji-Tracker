@@ -23,7 +23,8 @@ const LoginPage = () => {
   return (
     <div className="login-page">
       <header className="login-header">
-        <h1>Login</h1>
+        <h1>Welcome Back !</h1>
+        <p>Please login to continue your learning journey :)</p>
       </header>
       <section className="login-section">
         <form onSubmit={handleLogin}>

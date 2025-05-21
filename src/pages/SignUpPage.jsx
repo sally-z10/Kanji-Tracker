@@ -23,7 +23,8 @@ const SignUpPage = () => {
   return (
     <div className="signup-page">
       <header className="signup-header">
-        <h1>Sign Up</h1>
+        <h1>Welcome to Kanji Tracker!</h1>
+        <p>Sign Up to track your Kanji Journey</p>
       </header>
       <section className="signup-section">
         <form onSubmit={handleSignUp}>
