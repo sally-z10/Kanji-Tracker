@@ -531,8 +531,72 @@ body {
   text-decoration: none;
 }
 
-/* Center the signup button */
 .signup-button {
   display: block;
   margin: 10px auto;
+}
+
+/* Profile Page */
+.profile-picture {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 10px;
+  display: block;
+}
+
+.profile-picture-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.edit-profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.edit-profile-form div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.edit-profile-form label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.edit-profile-form input {
+  padding: 5px;
+  width: 200px;
+}
+
+.save-profile-btn,
+.cancel-profile-btn {
+  padding: 5px 10px;
+  margin: 5px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.save-profile-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.cancel-profile-btn {
+  background-color: #dc3545;
+  color: white;
 }
