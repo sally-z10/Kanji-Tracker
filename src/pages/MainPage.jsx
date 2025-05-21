@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import SearchBar from '../components/search-bar';
 import WelcomeMessage from '../components/messages';
 import RefreshButton from '../components/buttons';
@@ -11,6 +12,7 @@ const MainPage = () => {
   const [suggestedKanji, setSuggestedKanji] = useState(['山', '水', '田', '月']);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const { logout, isLoggedIn } = useAuth();
 
   useEffect(() => {
     fetchSuggestedKanji();
@@ -19,6 +21,10 @@ const MainPage = () => {
   const fetchSuggestedKanji = () => {
     const newKanji = ['日', '中', '木', '川'];
     setSuggestedKanji(newKanji);
+  };
+
+  const handleSearch = (query) => {
+    console.log('Search query:', query);
   };
 
   const handleKanjiClick = (kanji) => {
@@ -43,12 +49,14 @@ const MainPage = () => {
           />
           <button>Search</button>
         </div>
-        <button className="refresh-button" onClick={fetchSuggestedKanji}>
-          Refresh
-        </button>
+        {isLoggedIn && (
+          <button className="refresh-button" onClick={logout}>
+            Logout
+          </button>
+        )}
       </header>
       <main className="main-content">
-        <h1 className="welcome-message">Welcome, User!</h1>
+        <h1 className="welcome-message">Welcome, {isLoggedIn ? 'User' : 'Guest'}!</h1>
         <div className="kanji-grid">
           {suggestedKanji.map((kanji, index) => (
             <div
@@ -60,6 +68,9 @@ const MainPage = () => {
             </div>
           ))}
         </div>
+        <button className="refresh-button kanji-refresh-button" onClick={fetchSuggestedKanji}>
+          Refresh Kanji
+        </button>
       </main>
       <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <button className="close-button" onClick={toggleSidebar}>
