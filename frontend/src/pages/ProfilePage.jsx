@@ -1,107 +1,93 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useVocab } from '../context/VocabContext';
-import '../index.css';
+import { getUser, updateUser, getVocab } from '../utils/api';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const { username, userProfile, updateProfile } = useAuth();
-  const { vocabList } = useVocab();
-  const [isEditing, setIsEditing] = useState(false);
-  const [newName, setNewName] = useState(userProfile.name);
-  const [newPicture, setNewPicture] = useState(null);
+  const [user, setUser] = useState(null);
+  const [vocabList, setVocabList] = useState([]);
+  const [name, setName] = useState('');
+  const [profilePicture, setProfilePicture] = useState('');
+  const token = localStorage.getItem('token');
 
-  // Calculate total Kanji learned (unique Kanji in vocabList)
-  const uniqueKanji = [...new Set(vocabList.map((item) => item.kanji))];
-  const totalKanjiLearned = uniqueKanji.length;
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      try {
+        const userData = await getUser(token);
+        setUser(userData);
+        setName(userData.name);
+        setProfilePicture(userData.profilePicture || '');
 
-  // Calculate total words added
-  const totalWordsAdded = vocabList.length;
+        const vocabData = await getVocab(token);
+        setVocabList(vocabData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        localStorage.removeItem('token');
+        navigate('/login');
+      }
+    };
+    fetchData();
+  }, [token, navigate]);
 
-  const handleEditSubmit = (e) => {
-    e.preventDefault();
-    let pictureUrl = userProfile.picture;
-    if (newPicture) {
-      // Convert uploaded file to a base64 string (simulating a real upload)
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updateProfile(newName, reader.result);
-        setIsEditing(false);
-        setNewPicture(null);
-      };
-      reader.readAsDataURL(newPicture);
-    } else {
-      updateProfile(newName, pictureUrl);
-      setIsEditing(false);
+  const handleUpdate = async () => {
+    try {
+      await updateUser(token, name, profilePicture);
+      const updatedUser = await getUser(token);
+      setUser(updatedUser);
+    } catch (error) {
+      console.error('Error updating profile:', error);
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
+  if (!user) return <div>Loading...</div>;
+
   return (
-    <div className="profile-page">
-      <header className="profile-header">
-        <button onClick={() => navigate('/')}>Back</button>
-        <h1>Profile</h1>
-      </header>
-      <section className="profile-info">
-        <div className="profile-card">
-          {userProfile.picture ? (
-            <img
-              src={userProfile.picture}
-              alt="Profile"
-              className="profile-picture"
-            />
-          ) : (
-            <div className="profile-picture-placeholder">No Picture</div>
-          )}
-          <h2>Username: {username}</h2>
-          <p><strong>Name:</strong> {userProfile.name}</p>
-          <p><strong>Total Kanji Learned:</strong> {totalKanjiLearned}</p>
-          <p><strong>Total Words Added:</strong> {totalWordsAdded}</p>
-          {!isEditing ? (
-            <button
-              className="edit-profile-btn"
-              onClick={() => setIsEditing(true)}
-            >
-              Edit Profile
-            </button>
-          ) : (
-            <form onSubmit={handleEditSubmit} className="edit-profile-form">
-              <div>
-                <label>Name:</label>
-                <input
-                  type="text"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label>Profile Picture:</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setNewPicture(e.target.files[0])}
-                />
-              </div>
-              <button type="submit" className="save-profile-btn">
-                Save
-              </button>
-              <button
-                type="button"
-                className="cancel-profile-btn"
-                onClick={() => {
-                  setIsEditing(false);
-                  setNewName(userProfile.name);
-                  setNewPicture(null);
-                }}
-              >
-                Cancel
-              </button>
-            </form>
-          )}
-        </div>
-      </section>
+    <div className="p-4">
+      <h1 className="text-3xl font-bold mb-4">Profile</h1>
+      <div className="mb-4">
+        <p><strong>Username:</strong> {user.username}</p>
+        <p><strong>Name:</strong> {user.name}</p>
+        {user.profilePicture && (
+          <img src={user.profilePicture} alt="Profile" className="w-32 h-32 rounded-full mt-2" />
+        )}
+      </div>
+      <div className="mb-4">
+        <h2 className="text-2xl font-semibold">Stats</h2>
+        <p><strong>Kanji Learned:</strong> {new Set(vocabList.map((v) => v.kanji)).size}</p>
+        <p><strong>Words Added:</strong> {vocabList.length}</p>
+      </div>
+      <div className="mb-4">
+        <h2 className="text-2xl font-semibold">Update Profile</h2>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Update name"
+          className="border p-2 mr-2"
+        />
+        <input
+          type="text"
+          value={profilePicture}
+          onChange={(e) => setProfilePicture(e.target.value)}
+          placeholder="Profile picture URL"
+          className="border p-2 mr-2"
+        />
+        <button onClick={handleUpdate} className="bg-blue-500 text-white p-2 rounded">
+          Update
+        </button>
+      </div>
+      <button onClick={handleLogout} className="bg-red-500 text-white p-2 rounded">
+        Logout
+      </button>
     </div>
   );
 };
