@@ -1,118 +1,151 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getKanji, addVocab, getVocab, deleteVocab } from '../utils/api';
+import { useParams, Link } from 'react-router-dom';
 
 const KanjiDetailPage = () => {
   const { kanji } = useParams();
-  const navigate = useNavigate();
   const [kanjiData, setKanjiData] = useState(null);
-  const [vocabList, setVocabList] = useState([]);
+  const [error, setError] = useState(null);
   const [newVocab, setNewVocab] = useState('');
-  const token = localStorage.getItem('token'); // Retrieve token from localStorage
+  const [vocabList, setVocabList] = useState([]);
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
     const fetchKanjiData = async () => {
       try {
-        const data = await getKanji(kanji);
+        const response = await fetch(`http://localhost:5000/kanji/${kanji}`);
+        if (!response.ok) {
+          throw new Error('Kanji not found');
+        }
+        const data = await response.json();
         setKanjiData(data);
-      } catch (error) {
-        console.error('Error fetching Kanji:', error);
+      } catch (err) {
+        setError(err.message);
       }
     };
 
-    const fetchVocabData = async () => {
-      if (token) {
-        try {
-          const vocab = await getVocab(token);
-          setVocabList(vocab.filter((v) => v.kanji === kanji));
-        } catch (error) {
-          console.error('Error fetching vocab:', error);
+    const fetchVocabList = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/vocab?kanji=${kanji}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch vocabulary');
         }
+        const data = await response.json();
+        setVocabList(data);
+      } catch (err) {
+        console.error(err.message);
+        setVocabList([]);
       }
     };
 
     fetchKanjiData();
-    fetchVocabData();
+    if (token) fetchVocabList();
   }, [kanji, token]);
 
   const handleAddVocab = async () => {
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-    if (newVocab.trim()) {
-      try {
-        await addVocab(token, kanji, newVocab);
-        setNewVocab('');
-        const updatedVocab = await getVocab(token);
-        setVocabList(updatedVocab.filter((v) => v.kanji === kanji));
-      } catch (error) {
-        console.error('Error adding vocab:', error);
-      }
+    if (!newVocab.trim()) return;
+    try {
+      const response = await fetch('http://localhost:5000/vocab', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ word: newVocab, kanji }),
+      });
+      if (!response.ok) throw new Error('Failed to add vocabulary');
+      const addedVocab = await response.json();
+      setVocabList([...vocabList, addedVocab]);
+      setNewVocab('');
+    } catch (error) {
+      console.error('Error adding vocabulary:', error);
     }
   };
 
   const handleDeleteVocab = async (id) => {
-    if (!token) {
-      navigate('/login');
-      return;
-    }
     try {
-      await deleteVocab(token, id);
-      setVocabList(vocabList.filter((v) => v.id !== id));
+      const response = await fetch(`http://localhost:5000/vocab/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Failed to delete vocabulary');
+      setVocabList(vocabList.filter((vocab) => vocab.id !== id));
     } catch (error) {
-      console.error('Error deleting vocab:', error);
+      console.error('Error deleting vocabulary:', error);
     }
   };
 
-  if (!kanjiData) return <div>Loading...</div>;
+  if (error) return <p className="text-center text-red-500">{error}</p>;
+  if (!kanjiData) return <p className="text-center">Loading...</p>;
 
   return (
-    <div className="p-4">
-      <h1 className="text-4xl font-bold">{kanjiData.character}</h1>
-      <div className="mt-4">
-        <p><strong>On-yomi:</strong> {kanjiData.onyomi.join(', ') || 'N/A'}</p>
-        <p><strong>Kun-yomi:</strong> {kanjiData.kunyomi.join(', ') || 'N/A'}</p>
-        <p><strong>Meanings:</strong> {kanjiData.meanings.join(', ') || 'N/A'}</p>
-        <p><strong>Stroke Count:</strong> {kanjiData.strokeCount}</p>
-        <p><strong>JLPT Level:</strong> {kanjiData.jlptLevel}</p>
-        <p><strong>Grade:</strong> {kanjiData.grade}</p>
+    <div className="kanji-detail-page flex flex-col items-center p-6 min-h-screen">
+      <Link to="/">
+        <button className="mb-4 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Back</button>
+      </Link>
+      <h1 className="text-3xl font-bold mb-6">Kanji Details</h1>
+      <div className="kanji-card-fordetail flex flex-col items-center p-6 bg-white shadow-md rounded-lg border border-gray-200 max-w-md w-full">
+        <div className="kanji-box-fordetail text-6xl font-bold mb-4">
+          {kanjiData.character}
+        </div>
+        <div className="kanji-info text-center">
+          <p className="text-lg"><strong>Onyomi:</strong> {kanjiData.onyomi.join(', ') || 'N/A'}</p>
+          <p className="text-lg"><strong>Kunyomi:</strong> {kanjiData.kunyomi.join(', ') || 'N/A'}</p>
+          <p className="text-lg"><strong>Meanings:</strong> {kanjiData.meanings.join(', ') || 'N/A'}</p>
+          <p className="text-lg"><strong>Stroke Count:</strong> {kanjiData.strokeCount || 'N/A'}</p>
+          <p className="text-lg"><strong>JLPT Level:</strong> {kanjiData.jlptLevel || 'N/A'}</p>
+        </div>
       </div>
-      <div className="mt-4">
-        <h2 className="text-2xl font-semibold">Add Vocabulary</h2>
-        <input
-          type="text"
-          value={newVocab}
-          onChange={(e) => setNewVocab(e.target.value)}
-          placeholder="Enter vocabulary word"
-          className="border p-2 mr-2"
-        />
-        <button onClick={handleAddVocab} className="bg-blue-500 text-white p-2 rounded">
-          Add
-        </button>
-      </div>
-      <div className="mt-4">
-        <h2 className="text-2xl font-semibold">Your Vocabulary</h2>
-        {vocabList.length > 0 ? (
-          <ul>
-            {vocabList.map((vocab) => (
-              <li key={vocab.id} className="flex justify-between items-center border-b py-2">
-                <span>{vocab.word}</span>
-                {token && (
-                  <button
-                    onClick={() => handleDeleteVocab(vocab.id)}
-                    className="text-red-500"
+
+      {token && (
+        <>
+          <div className="vocab-add-card mt-6 p-6 bg-white shadow-md rounded-lg border border-gray-200 max-w-md w-full flex flex-col items-center">
+            <h2 className="text-2xl font-semibold mb-4">Add Vocabulary</h2>
+            <div className="flex w-full max-w-sm items-center">
+              <input
+                type="text"
+                value={newVocab}
+                onChange={(e) => setNewVocab(e.target.value)}
+                placeholder="Enter vocabulary word"
+                className="vocab-input border p-2 rounded flex-1 mr-2"
+              />
+              <button
+                onClick={handleAddVocab}
+                className="vocab-add-button bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          <div className="vocab-list-card mt-6 p-6 bg-white shadow-md rounded-lg border border-gray-200 max-w-md w-full flex flex-col items-center">
+            <h2 className="text-2xl font-semibold mb-4">Your Vocabulary</h2>
+            {vocabList.length > 0 ? (
+              <ul className="w-full max-w-sm">
+                {vocabList.map((vocab) => (
+                  <li
+                    key={vocab.id}
+                    className="vocab-item flex justify-between items-center border-b py-2 px-4 hover:bg-gray-100 transition-colors rounded"
                   >
-                    Delete
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No vocabulary added yet.</p>
-        )}
-      </div>
+                    <span className="text-lg">{vocab.word}</span>
+                    {token && (
+                      <button
+                        onClick={() => handleDeleteVocab(vocab.id)}
+                        className="vocab-delete-button text-red-500 hover:text-red-700 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500">No vocabulary added yet.</p>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };
