@@ -294,14 +294,14 @@ body {
   border-radius: 4px;
 }
 
-/* Profile Page */
+/* Existing styles remain, adding/updating the following */
 .profile-page {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 20px;
   max-width: 1200px;
-  margin: 10vh auto 0; /* Offset for header */
+  margin: 10vh auto 0;
   min-height: calc(90vh - 40px);
 }
 
@@ -341,17 +341,8 @@ body {
   padding: 20px;
   border-radius: 8px;
   background-color: #f9f9f9;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.profile-card h2 {
-  font-size: 2rem;
-  margin-bottom: 10px;
-}
-
-.profile-card p {
-  font-size: 1.2rem;
-  margin: 5px 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: left;
 }
 
 .profile-picture {
@@ -361,6 +352,7 @@ body {
   object-fit: cover;
   margin: 0 auto 10px;
   display: block;
+  border: 2px solid #ddd;
 }
 
 .profile-picture-placeholder {
@@ -374,24 +366,7 @@ body {
   margin: 0 auto 10px;
   font-size: 0.9rem;
   color: #666;
-}
-
-.edit-profile-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.edit-profile-form div {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.edit-profile-form label {
-  font-weight: bold;
-  margin-bottom: 5px;
+  border: 2px solid #ddd;
 }
 
 .edit-profile-form input {
@@ -399,33 +374,7 @@ body {
   width: 200px;
   border: 1px solid #ccc;
   border-radius: 4px;
-}
-
-.save-profile-btn,
-.cancel-profile-btn {
-  padding: 6px 12px;
-  margin: 5px;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.save-profile-btn {
-  background-color: #007bff;
-  color: white;
-}
-
-.save-profile-btn:hover {
-  background-color: #0056b3;
-}
-
-.cancel-profile-btn {
-  background-color: #dc3545;
-  color: white;
-}
-
-.cancel-profile-btn:hover {
-  background-color: #c82333;
+  margin-bottom: 10px;
 }
 
 /* Word List Page */

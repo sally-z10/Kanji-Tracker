@@ -1,93 +1,108 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getUser, updateUser, getVocab } from '../utils/api';
+import { Link, useNavigate } from 'react-router-dom';
+import { getUser, updateUser } from '../utils/api';
 
 const ProfilePage = () => {
-  const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [vocabList, setVocabList] = useState([]);
-  const [name, setName] = useState('');
-  const [profilePicture, setProfilePicture] = useState('');
-  const token = localStorage.getItem('token');
+  const [profilePictureUrl, setProfilePictureUrl] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!token) {
-        navigate('/login');
-        return;
-      }
+    const fetchUserData = async () => {
       try {
-        const userData = await getUser(token);
-        setUser(userData);
-        setName(userData.name);
-        setProfilePicture(userData.profilePicture || '');
-
-        const vocabData = await getVocab(token);
-        setVocabList(vocabData);
+        const token = localStorage.getItem('token');
+        if (token) {
+          const userData = await getUser(token);
+          setUser(userData);
+          setProfilePictureUrl(userData.profilePictureUrl || '');
+        }
       } catch (error) {
-        console.error('Error fetching data:', error);
-        localStorage.removeItem('token');
-        navigate('/login');
+        console.error('Error fetching user data:', error);
       }
     };
-    fetchData();
-  }, [token, navigate]);
+    fetchUserData();
+  }, []);
 
-  const handleUpdate = async () => {
+  const handleUpdateProfile = async () => {
     try {
-      await updateUser(token, name, profilePicture);
-      const updatedUser = await getUser(token);
-      setUser(updatedUser);
+      const token = localStorage.getItem('token');
+      if (token && user) {
+        await updateUser(token, { ...user, profilePictureUrl });
+        setIsEditing(false);
+        alert('Profile updated successfully!');
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
+      alert('Failed to update profile.');
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
-
-  if (!user) return <div>Loading...</div>;
+  if (!user) return <p>Loading...</p>;
 
   return (
-    <div className="p-4">
-      <h1 className="text-3xl font-bold mb-4">Profile</h1>
-      <div className="mb-4">
-        <p><strong>Username:</strong> {user.username}</p>
-        <p><strong>Name:</strong> {user.name}</p>
-        {user.profilePicture && (
-          <img src={user.profilePicture} alt="Profile" className="w-32 h-32 rounded-full mt-2" />
-        )}
+    <div className="profile-page">
+      <div className="profile-header">
+        <Link to="/">
+          <button className="mb-4 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Back</button>
+        </Link>
+        <h1 className="text-3xl font-bold mb-6">Profile</h1>
       </div>
-      <div className="mb-4">
-        <h2 className="text-2xl font-semibold">Stats</h2>
-        <p><strong>Kanji Learned:</strong> {new Set(vocabList.map((v) => v.kanji)).size}</p>
-        <p><strong>Words Added:</strong> {vocabList.length}</p>
+      <div className="profile-info flex flex-col items-center">
+        <div className="profile-card p-6 bg-white shadow-md rounded-lg border border-gray-200 max-w-md w-full">
+          {profilePictureUrl ? (
+            <img
+              src={profilePictureUrl}
+              alt="Profile"
+              className="profile-picture mb-4"
+              onError={(e) => {
+                e.target.src = 'https://via.placeholder.com/100'; // Fallback image
+              }}
+            />
+          ) : (
+            <div className="profile-picture-placeholder mb-4">No Image</div>
+          )}
+          <p className="text-lg"><strong>Username:</strong> {user.username}</p>
+          <p className="text-lg"><strong>Name:</strong> {user.name || 'Not set'}</p>
+          <div className="mt-4">
+            <h2 className="text-xl font-semibold mb-2">Stats</h2>
+            <p className="text-lg">Kanji Learned: {user.kanjiLearned || 0}</p>
+            <p className="text-lg">Words Added: {user.wordsAdded || 0}</p>
+          </div>
+          {isEditing ? (
+            <div className="mt-4 flex flex-col items-center">
+              <input
+                type="text"
+                value={profilePictureUrl}
+                onChange={(e) => setProfilePictureUrl(e.target.value)}
+                placeholder="Profile picture URL"
+                className="border p-2 rounded mb-2 w-full max-w-xs"
+              />
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleUpdateProfile}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Change Profile
+                </button>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Change Profile
+            </button>
+          )}
+        </div>
       </div>
-      <div className="mb-4">
-        <h2 className="text-2xl font-semibold">Update Profile</h2>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Update name"
-          className="border p-2 mr-2"
-        />
-        <input
-          type="text"
-          value={profilePicture}
-          onChange={(e) => setProfilePicture(e.target.value)}
-          placeholder="Profile picture URL"
-          className="border p-2 mr-2"
-        />
-        <button onClick={handleUpdate} className="bg-blue-500 text-white p-2 rounded">
-          Update
-        </button>
-      </div>
-      <button onClick={handleLogout} className="bg-red-500 text-white p-2 rounded">
-        Logout
-      </button>
     </div>
   );
 };
