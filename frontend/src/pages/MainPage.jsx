@@ -43,15 +43,16 @@ const MainPage = () => {
         </button>
       </div>
 
+      <div className="main-content">
       {searchResults.length > 0 ? (
         <div>
           <h2 className="text-2xl font-semibold mb-2">Search Results</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="kanji-grid">
             {searchResults.map((result, index) => (
               <Link
                 to={`/kanji/${result.slug}`}
                 key={index}
-                className="border p-4 rounded shadow hover:bg-gray-100 text-center"
+                className="kanji-box"
               >
                 <div className="text-2xl">{result.kanji}</div>
                 <div>{result.reading}</div>
@@ -63,12 +64,12 @@ const MainPage = () => {
       ) : (
         <div>
           <h2 className="text-2xl font-semibold mb-2">Featured Kanji</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="kanji-grid">
             {kanjiList.map((kanji, index) => (
               <Link
                 to={`/kanji/${kanji}`}
                 key={index}
-                className="border p-4 rounded shadow hover:bg-gray-100 text-center"
+                className="kanji-box"
               >
                 <div className="text-2xl">{kanji}</div>
               </Link>
@@ -77,6 +78,7 @@ const MainPage = () => {
         </div>
       )}
     </div>
+  </div>
   );
 };
 

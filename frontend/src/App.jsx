@@ -7,10 +7,11 @@ import WordListPage from './pages/WordListPage';
 import HowToUsePage from './pages/HowToUsePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignUpPage';
-import { getUser } from './utils/api'; // Use getUser instead of getProfile
+import { getUser } from './utils/api';
 
 const App = () => {
   const [user, setUser] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -34,21 +35,36 @@ const App = () => {
     setUser(null);
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <Router>
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 bg-gray-800 text-white h-screen p-4">
+      <div className="main-page">
+        <header className="header">
+          <button className="hamburger-menu" onClick={toggleSidebar}>
+            ☰
+          </button>
+          <div className="search-bar">
+            <input type="text" placeholder="Search Kanji..." />
+            <button>Search</button>
+          </div>
+        </header>
+        <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+          <button className="close-button" onClick={toggleSidebar}>
+            ×
+          </button>
           <h1 className="text-2xl font-bold mb-4">Kanji Tracker</h1>
           <nav>
-            <Link to="/" className="block py-2 px-4 hover:bg-gray-700">Home</Link>
+            <Link to="/" className="block py-2 px-4 hover:bg-gray-700" onClick={toggleSidebar}>Home</Link>
             {user ? (
               <>
-                <Link to="/profile" className="block py-2 px-4 hover:bg-gray-700">Profile</Link>
-                <Link to="/wordlist" className="block py-2 px-4 hover:bg-gray-700">Your Word List</Link>
-                <Link to="/howtouse" className="block py-2 px-4 hover:bg-gray-700">How to Use</Link>
+                <Link to="/profile" className="block py-2 px-4 hover:bg-gray-700" onClick={toggleSidebar}>Profile</Link>
+                <Link to="/wordlist" className="block py-2 px-4 hover:bg-gray-700" onClick={toggleSidebar}>Your Word List</Link>
+                <Link to="/howtouse" className="block py-2 px-4 hover:bg-gray-700" onClick={toggleSidebar}>How to Use</Link>
                 <button
-                  onClick={handleLogout}
+                  onClick={() => { handleLogout(); toggleSidebar(); }}
                   className="block w-full text-left py-2 px-4 hover:bg-gray-700"
                 >
                   Logout
@@ -56,15 +72,13 @@ const App = () => {
               </>
             ) : (
               <>
-                <Link to="/login" className="block py-2 px-4 hover:bg-gray-700">Login</Link>
-                <Link to="/signup" className="block py-2 px-4 hover:bg-gray-700">Sign Up</Link>
+                <Link to="/login" className="block py-2 px-4 hover:bg-gray-700" onClick={toggleSidebar}>Login</Link>
+                <Link to="/signup" className="block py-2 px-4 hover:bg-gray-700" onClick={toggleSidebar}>Sign Up</Link>
               </>
             )}
           </nav>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 p-4">
+        </aside>
+        <main className={`main-content ${sidebarOpen ? 'ml-[200px]' : ''}`}>
           <Routes>
             <Route path="/" element={<MainPage />} />
             <Route path="/kanji/:kanji" element={<KanjiDetailPage />} />
@@ -74,7 +88,7 @@ const App = () => {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
           </Routes>
-        </div>
+        </main>
       </div>
     </Router>
   );
