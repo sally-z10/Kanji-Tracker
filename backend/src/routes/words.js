@@ -7,11 +7,11 @@ const auth = require('../middleware/auth');
 router.get('/', auth, async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
-    const words = await Word.getUserWords(req.user.id, page, limit);
+    const words = await Word.getUserWords(req.userId, page, limit);
     res.json(words);
   } catch (error) {
     console.error('Error fetching words:', error);
-    res.status(500).json({ error: 'Error fetching words' });
+    res.status(500).json({ error: 'Error fetching words', details: error.message });
   }
 });
 
@@ -20,8 +20,12 @@ router.post('/', auth, async (req, res) => {
   try {
     const { word, reading, meaning, kanjiCharacter } = req.body;
     
+    console.log('Received word data:', { word, reading, meaning, kanjiCharacter });
+    
     // Validate word with Jisho API
-    const validation = await Word.validateWord(word, reading);
+    const validation = await Word.validateWordWithJisho(word, reading);
+    console.log('Jisho validation result:', validation);
+    
     if (!validation.isValid) {
       return res.status(400).json({ 
         error: 'Invalid word or reading',
@@ -30,16 +34,33 @@ router.post('/', auth, async (req, res) => {
     }
 
     // Check for duplicates
-    const isDuplicate = await Word.checkDuplicate(req.user.id, word);
+    const isDuplicate = await Word.wordExists(req.userId, word, kanjiCharacter);
+    console.log('Duplicate check result:', isDuplicate);
+    
     if (isDuplicate) {
       return res.status(400).json({ error: 'Word already logged' });
     }
 
-    const newWord = await Word.logWord(req.user.id, word, reading, meaning, kanjiCharacter);
+    const wordData = {
+      userId: req.userId,
+      word,
+      reading,
+      meaning,
+      kanjiCharacter
+    };
+    console.log('Attempting to log word with data:', wordData);
+    
+    const newWord = await Word.logWord(wordData);
+    console.log('Word logged successfully:', newWord);
+    
     res.status(201).json(newWord);
   } catch (error) {
     console.error('Error logging word:', error);
-    res.status(500).json({ error: 'Error logging word' });
+    res.status(500).json({ 
+      error: 'Error logging word',
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
@@ -49,7 +70,7 @@ router.put('/:id', auth, async (req, res) => {
     const { id } = req.params;
     const { reading, meaning } = req.body;
 
-    const updatedWord = await Word.updateWord(req.user.id, id, reading, meaning);
+    const updatedWord = await Word.updateWord(id, req.userId, { reading, meaning });
     if (!updatedWord) {
       return res.status(404).json({ error: 'Word not found' });
     }
@@ -57,7 +78,7 @@ router.put('/:id', auth, async (req, res) => {
     res.json(updatedWord);
   } catch (error) {
     console.error('Error updating word:', error);
-    res.status(500).json({ error: 'Error updating word' });
+    res.status(500).json({ error: 'Error updating word', details: error.message });
   }
 });
 
@@ -65,7 +86,7 @@ router.put('/:id', auth, async (req, res) => {
 router.delete('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted = await Word.deleteWord(req.user.id, id);
+    const deleted = await Word.deleteWord(id, req.userId);
     
     if (!deleted) {
       return res.status(404).json({ error: 'Word not found' });
@@ -74,31 +95,19 @@ router.delete('/:id', auth, async (req, res) => {
     res.json({ message: 'Word deleted successfully' });
   } catch (error) {
     console.error('Error deleting word:', error);
-    res.status(500).json({ error: 'Error deleting word' });
+    res.status(500).json({ error: 'Error deleting word', details: error.message });
   }
 });
 
-// Get words for specific kanji
+// Get words for kanji
 router.get('/kanji/:character', auth, async (req, res) => {
   try {
     const { character } = req.params;
-    const words = await Word.getWordsForKanji(req.user.id, character);
+    const words = await Word.getWordsForKanji(req.userId, character);
     res.json(words);
   } catch (error) {
-    console.error('Error fetching kanji words:', error);
-    res.status(500).json({ error: 'Error fetching kanji words' });
-  }
-});
-
-// Get recent words
-router.get('/recent', auth, async (req, res) => {
-  try {
-    const { limit = 10 } = req.query;
-    const words = await Word.getRecentWords(req.user.id, limit);
-    res.json(words);
-  } catch (error) {
-    console.error('Error fetching recent words:', error);
-    res.status(500).json({ error: 'Error fetching recent words' });
+    console.error('Error fetching words for kanji:', error);
+    res.status(500).json({ error: 'Error fetching words for kanji', details: error.message });
   }
 });
 

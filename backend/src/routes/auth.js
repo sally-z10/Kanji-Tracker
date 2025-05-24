@@ -1,56 +1,103 @@
 const express = require('express');
+const router = express.Router();
+const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const pool = require('../config/db');
-const router = express.Router();
 
-// Signup
-router.post('/signup', async (req, res) => {
-  const { username, password, name } = req.body;
+// Register new user
+router.post('/register', async (req, res) => {
   try {
-    const userExists = await pool.query('SELECT * FROM Users WHERE username = $1', [username]);
-    if (userExists.rows.length > 0) {
+    const { email, username, password } = req.body;
+
+    // Validate input
+    if (!email || !username || !password) {
+      return res.status(400).json({ error: 'Email, username, and password are required' });
+    }
+
+    // Check if email already exists
+    const emailExists = await User.emailExists(email);
+    if (emailExists) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    // Check if username already exists
+    const usernameExists = await User.usernameExists(username);
+    if (usernameExists) {
       return res.status(400).json({ error: 'Username already taken' });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
-    const newUser = await pool.query(
-      'INSERT INTO Users (username, password_hash, name) VALUES ($1, $2, $3) RETURNING id, username, name',
-      [username, passwordHash, name || username]
+    // Create user
+    const user = await User.createUser({ email, username, password });
+    
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
     );
 
-    res.status(201).json(newUser.rows[0]);
+    res.status(201).json({
+      message: 'User registered successfully',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username
+      }
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('Registration error:', error);
+    res.status(500).json({ 
+      error: 'Error registering user',
+      details: error.message 
+    });
   }
 });
 
-// Login
+// Login user
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
   try {
-    const user = await pool.query('SELECT * FROM Users WHERE username = $1', [username]);
-    if (user.rows.length === 0) {
-      return res.status(400).json({ error: 'Invalid username or password' });
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.rows[0].password_hash);
-    if (!isMatch) {
-      return res.status(400).json({ error: 'Invalid username or password' });
+    // Find user by email
+    const user = await User.findByEmail(email);
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const token = jwt.sign({ userId: user.rows[0].id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Verify password
+    const isValidPassword = await User.comparePassword(password, user.password_hash);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
     res.json({
+      message: 'Login successful',
       token,
       user: {
-        id: user.rows[0].id,
-        username: user.rows[0].username,
-        name: user.rows[0].name,
-        profile_picture: user.rows[0].profile_picture,
-      },
+        id: user.id,
+        email: user.email,
+        username: user.username
+      }
     });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('Login error:', error);
+    res.status(500).json({ 
+      error: 'Error logging in',
+      details: error.message 
+    });
   }
 });
 

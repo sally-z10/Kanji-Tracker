@@ -38,9 +38,9 @@ CREATE TABLE user_kanji_words (
 );
 
 -- Completed kanji table
-CREATE TABLE completed_kanji (
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    kanji_character VARCHAR(1) NOT NULL REFERENCES kanji(character) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS completed_kanji (
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    kanji_character VARCHAR(1) REFERENCES kanji(character) ON DELETE CASCADE,
     completed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, kanji_character)
 );
@@ -77,4 +77,27 @@ CREATE TRIGGER update_kanji_updated_at
 CREATE TRIGGER update_user_kanji_words_updated_at
     BEFORE UPDATE ON user_kanji_words
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column(); 
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Create trigger to automatically mark kanji as completed when 3 words are logged
+CREATE OR REPLACE FUNCTION check_kanji_completion()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (
+    SELECT COUNT(*)
+    FROM user_kanji_words
+    WHERE user_id = NEW.user_id
+    AND kanji_character = NEW.kanji_character
+  ) >= 3 THEN
+    INSERT INTO completed_kanji (user_id, kanji_character)
+    VALUES (NEW.user_id, NEW.kanji_character)
+    ON CONFLICT (user_id, kanji_character) DO NOTHING;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER kanji_completion_trigger
+AFTER INSERT ON user_kanji_words
+FOR EACH ROW
+EXECUTE FUNCTION check_kanji_completion(); 

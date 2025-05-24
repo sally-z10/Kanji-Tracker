@@ -12,19 +12,16 @@ class Progress {
    * @returns {Promise<Object>} Complete progress data with percentages
    */
   static async getUserProgress(userId) {
-    const [kanjiProgress, wordProgress, jlptProgress, streak] = await Promise.all([
+    const [kanjiProgress, wordProgress, jlptProgress] = await Promise.all([
       this.getKanjiProgress(userId),
       this.getWordProgress(userId),
-      this.getProgressByJLPTLevel(userId),
-      this.getLearningStreak(userId)
+      this.getProgressByJLPTLevel(userId)
     ]);
 
     return {
       kanjiProgress,
       wordProgress,
-      jlptProgress,
-      streak,
-      achievements: await this.getAchievements(userId)
+      jlptProgress
     };
   }
 
@@ -62,21 +59,18 @@ class Progress {
 
   /**
    * Get word progress statistics
-   * Counts total words logged and words per kanji averages
+   * Counts total words and words per kanji
    * @param {number} userId - User ID
-   * @returns {Promise<Object>} Word progress with total counts and averages
+   * @returns {Promise<Object>} Word progress statistics
    */
   static async getWordProgress(userId) {
     const query = `
-      WITH word_stats AS (
-        SELECT 
-          COUNT(*) as total_words,
-          COUNT(DISTINCT kanji_character) as kanji_with_words,
-          COUNT(*)::float / NULLIF(COUNT(DISTINCT kanji_character), 0) as avg_words_per_kanji
-        FROM user_kanji_words
-        WHERE user_id = $1
-      )
-      SELECT * FROM word_stats
+      SELECT 
+        COUNT(*) as total_words,
+        COUNT(DISTINCT kanji_character) as kanji_with_words,
+        ROUND(COUNT(*)::numeric / NULLIF(COUNT(DISTINCT kanji_character), 0), 1) as avg_words_per_kanji
+      FROM user_kanji_words
+      WHERE user_id = $1
     `;
 
     const result = await pool.query(query, [userId]);
@@ -133,45 +127,6 @@ class Progress {
   }
 
   /**
-   * Get learning streak information
-   * Tracks consecutive days of vocabulary logging
-   * @param {number} userId - User ID
-   * @returns {Promise<Object>} Streak data with current/longest streaks
-   */
-  static async getLearningStreak(userId) {
-    const query = `
-      WITH daily_activity AS (
-        SELECT DISTINCT DATE(created_at) as activity_date
-        FROM user_kanji_words
-        WHERE user_id = $1
-        ORDER BY activity_date
-      ),
-      streak_groups AS (
-        SELECT 
-          activity_date,
-          activity_date - ROW_NUMBER() OVER (ORDER BY activity_date)::int as streak_group
-        FROM daily_activity
-      )
-      SELECT 
-        COUNT(*) as current_streak,
-        MAX(streak_length) as longest_streak
-      FROM (
-        SELECT COUNT(*) as streak_length
-        FROM streak_groups
-        GROUP BY streak_group
-      ) streaks
-      WHERE streak_group = (
-        SELECT streak_group
-        FROM streak_groups
-        WHERE activity_date = CURRENT_DATE
-      )
-    `;
-
-    const result = await pool.query(query, [userId]);
-    return result.rows[0];
-  }
-
-  /**
    * Get daily progress statistics for charting
    * Returns word logging activity over specified time period
    * @param {number} userId - User ID
@@ -221,37 +176,6 @@ class Progress {
     `;
 
     await pool.query(query, [userId]);
-  }
-
-  /**
-   * Get achievement milestones reached by user
-   * Calculates and returns earned achievements based on progress
-   * @param {number} userId - User ID
-   * @returns {Promise<Array>} Array of achieved milestones
-   */
-  static async getAchievements(userId) {
-    const achievements = [];
-    const progress = await this.getUserProgress(userId);
-
-    // Word count achievements
-    const wordCount = progress.wordProgress.total_words;
-    if (wordCount >= 1000) achievements.push({ type: 'words', level: 'master', count: 1000 });
-    else if (wordCount >= 500) achievements.push({ type: 'words', level: 'advanced', count: 500 });
-    else if (wordCount >= 100) achievements.push({ type: 'words', level: 'intermediate', count: 100 });
-
-    // Kanji completion achievements
-    const kanjiCompletion = progress.kanjiProgress.completed;
-    if (kanjiCompletion >= 1000) achievements.push({ type: 'kanji', level: 'master', count: 1000 });
-    else if (kanjiCompletion >= 500) achievements.push({ type: 'kanji', level: 'advanced', count: 500 });
-    else if (kanjiCompletion >= 100) achievements.push({ type: 'kanji', level: 'intermediate', count: 100 });
-
-    // Streak achievements
-    const streak = progress.streak.current_streak;
-    if (streak >= 30) achievements.push({ type: 'streak', level: 'master', days: 30 });
-    else if (streak >= 14) achievements.push({ type: 'streak', level: 'advanced', days: 14 });
-    else if (streak >= 7) achievements.push({ type: 'streak', level: 'intermediate', days: 7 });
-
-    return achievements;
   }
 }
 

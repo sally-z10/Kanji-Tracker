@@ -224,6 +224,61 @@ class Kanji {
     await this.cacheKanjiData(kanjiData);
     return kanjiData;
   }
+
+  /**
+   * Ensure kanji exists in database, fetch from Jisho if needed
+   * @param {string} character - Kanji character
+   * @returns {Promise<Object>} Kanji data
+   */
+  static async ensureKanjiExists(character) {
+    // Check if kanji exists in database
+    const existingKanji = await pool.query(
+      'SELECT * FROM kanji WHERE character = $1',
+      [character]
+    );
+
+    if (existingKanji.rows[0]) {
+      return existingKanji.rows[0];
+    }
+
+    // Fetch kanji data from Jisho
+    const result = await jisho.searchForKanji(character);
+    if (!result.found) {
+      throw new Error('Kanji not found in Jisho');
+    }
+
+    // Insert kanji into database
+    const query = `
+      INSERT INTO kanji (
+        character, onyomi, kunyomi, meanings,
+        stroke_count, jlpt_level, grade
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *
+    `;
+
+    const kanjiData = {
+      character: result.query,
+      onyomi: result.onyomi || [],
+      kunyomi: result.kunyomi || [],
+      meanings: result.meaning.split(', ') || [],
+      strokeCount: result.strokeCount || 0,
+      jlptLevel: result.jlptLevel || 'Unknown',
+      grade: result.grade || 'Unknown'
+    };
+
+    const newKanji = await pool.query(query, [
+      kanjiData.character,
+      kanjiData.onyomi,
+      kanjiData.kunyomi,
+      kanjiData.meanings,
+      kanjiData.strokeCount,
+      kanjiData.jlptLevel,
+      kanjiData.grade
+    ]);
+
+    return newKanji.rows[0];
+  }
 }
 
 module.exports = Kanji; 

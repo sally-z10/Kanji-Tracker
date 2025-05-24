@@ -1,38 +1,39 @@
 const express = require('express');
-const pool = require('../config/db');
-const authMiddleware = require('../middleware/auth');
 const router = express.Router();
+const authMiddleware = require('../middleware/auth');
+const User = require('../models/User');
 
-// Get profile
+// Get user profile
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const user = await pool.query('SELECT id, username, name, profile_picture FROM Users WHERE id = $1', [req.userId]);
-    const vocab = await pool.query('SELECT kanji, word FROM Vocabulary WHERE user_id = $1', [req.userId]);
-
-    const uniqueKanji = [...new Set(vocab.rows.map((item) => item.kanji))];
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
     res.json({
-      username: user.rows[0].username,
-      name: user.rows[0].name,
-      profile_picture: user.rows[0].profile_picture,
-      totalKanjiLearned: uniqueKanji.length,
-      totalWordsAdded: vocab.rows.length,
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      created_at: user.created_at
     });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error fetching profile:', error);
+    res.status(500).json({ error: 'Error fetching profile', details: error.message });
   }
 });
 
-// Update profile
+// Update user profile
 router.put('/', authMiddleware, async (req, res) => {
-  const { name, profile_picture } = req.body;
   try {
-    await pool.query(
-      'UPDATE Users SET name = $1, profile_picture = $2 WHERE id = $3',
-      [name, profile_picture, req.userId]
-    );
-    res.json({ message: 'Profile updated' });
+    const { username, email } = req.body;
+    const updatedUser = await User.updateProfile(req.userId, { username, email });
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(updatedUser);
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Error updating profile', details: error.message });
   }
 });
 

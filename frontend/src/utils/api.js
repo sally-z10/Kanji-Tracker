@@ -21,14 +21,20 @@ export const getUser = (token) =>
 export const updateUser = (token, name, profilePicture) =>
   apiRequest('/profile', 'PUT', { name, profilePicture }, token);
 
-export const getVocab = (token) =>
-  apiRequest('/vocab', 'GET', null, token);
+export const getWords = (token, page = 1, limit = 10) =>
+  apiRequest(`/words?page=${page}&limit=${limit}`, 'GET', null, token);
 
-export const addVocab = (token, kanji, word) =>
-  apiRequest('/vocab', 'POST', { kanji, word }, token);
+export const addWord = (token, word, reading, meaning, kanjiCharacter) =>
+  apiRequest('/words', 'POST', { word, reading, meaning, kanjiCharacter }, token);
 
-export const deleteVocab = (token, id) =>
-  apiRequest(`/vocab/${id}`, 'DELETE', null, token);
+export const updateWord = (token, id, reading, meaning) =>
+  apiRequest(`/words/${id}`, 'PUT', { reading, meaning }, token);
+
+export const deleteWord = (token, id) =>
+  apiRequest(`/words/${id}`, 'DELETE', null, token);
+
+export const getWordsForKanji = (token, character) =>
+  apiRequest(`/words/kanji/${character}`, 'GET', null, token);
 
 export const getKanji = (character) =>
   apiRequest(`/kanji/${character}`);

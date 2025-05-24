@@ -1,22 +1,31 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const authRoutes = require('./routes/auth');
-const profileRoutes = require('./routes/profile');
-const vocabRoutes = require('./routes/vocab');
-const kanjiRoutes = require('./routes/kanji');
+const morgan = require('morgan');
 
 const app = express();
 
+// Middleware
 app.use(cors());
-// app.use(cors({ origin: '*' }));
 app.use(express.json());
+app.use(morgan('dev'));
 
-app.use('/auth', authRoutes);
-app.use('/profile', profileRoutes);
-app.use('/vocab', vocabRoutes);
-app.use('/kanji', kanjiRoutes);
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/profile', require('./routes/profile'));
+app.use('/api/words', require('./routes/words'));
+app.use('/api/progress', require('./routes/progress'));
+app.use('/api/kanji', require('./routes/kanji'));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
 });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+module.exports = app; // Export for testing

@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { getWordsForKanji, addWord, deleteWord } from '../utils/api';
 
 const KanjiDetailPage = () => {
   const { kanji } = useParams();
   const [kanjiData, setKanjiData] = useState(null);
   const [error, setError] = useState(null);
-  const [newVocab, setNewVocab] = useState('');
-  const [vocabList, setVocabList] = useState([]);
+  const [newWord, setNewWord] = useState({ word: '', reading: '', meaning: '' });
+  const [wordList, setWordList] = useState([]);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
     const fetchKanjiData = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/kanji/${kanji}`);
+        const response = await fetch(`http://localhost:5000/api/kanji/${kanji}`);
         if (!response.ok) {
           throw new Error('Kanji not found');
         }
@@ -23,56 +24,38 @@ const KanjiDetailPage = () => {
       }
     };
 
-    const fetchVocabList = async () => {
+    const fetchWordList = async () => {
+      if (!token) return;
       try {
-        const response = await fetch(`http://localhost:5000/vocab?kanji=${kanji}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch vocabulary');
-        }
-        const data = await response.json();
-        setVocabList(data);
+        const words = await getWordsForKanji(token, kanji);
+        setWordList(words);
       } catch (err) {
-        console.error(err.message);
-        setVocabList([]);
+        console.error('Error fetching words:', err);
+        setWordList([]);
       }
     };
 
     fetchKanjiData();
-    if (token) fetchVocabList();
+    fetchWordList();
   }, [kanji, token]);
 
-  const handleAddVocab = async () => {
-    if (!newVocab.trim()) return;
+  const handleAddWord = async () => {
+    if (!newWord.word.trim() || !newWord.reading.trim() || !newWord.meaning.trim()) return;
     try {
-      const response = await fetch('http://localhost:5000/vocab', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ word: newVocab, kanji }),
-      });
-      if (!response.ok) throw new Error('Failed to add vocabulary');
-      const addedVocab = await response.json();
-      setVocabList([...vocabList, addedVocab]);
-      setNewVocab('');
+      const addedWord = await addWord(token, newWord.word, newWord.reading, newWord.meaning, kanji);
+      setWordList([...wordList, addedWord]);
+      setNewWord({ word: '', reading: '', meaning: '' });
     } catch (error) {
-      console.error('Error adding vocabulary:', error);
+      console.error('Error adding word:', error);
     }
   };
 
-  const handleDeleteVocab = async (id) => {
+  const handleDeleteWord = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5000/vocab/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error('Failed to delete vocabulary');
-      setVocabList(vocabList.filter((vocab) => vocab.id !== id));
+      await deleteWord(token, id);
+      setWordList(wordList.filter((word) => word.id !== id));
     } catch (error) {
-      console.error('Error deleting vocabulary:', error);
+      console.error('Error deleting word:', error);
     }
   };
 
@@ -100,48 +83,64 @@ const KanjiDetailPage = () => {
 
       {token && (
         <>
-          <div className="vocab-add-card mt-6 p-6 bg-white shadow-md rounded-lg border border-gray-200 max-w-md w-full flex flex-col items-center">
-            <h2 className="text-2xl font-semibold mb-4">Add Vocabulary</h2>
-            <div className="flex w-full max-w-sm items-center">
+          <div className="word-add-card mt-6 p-6 bg-white shadow-md rounded-lg border border-gray-200 max-w-md w-full flex flex-col items-center">
+            <h2 className="text-2xl font-semibold mb-4">Add Word</h2>
+            <div className="flex flex-col w-full max-w-sm gap-2">
               <input
                 type="text"
-                value={newVocab}
-                onChange={(e) => setNewVocab(e.target.value)}
-                placeholder="Enter vocabulary word"
-                className="vocab-input border p-2 rounded flex-1 mr-2"
+                value={newWord.word}
+                onChange={(e) => setNewWord(prev => ({ ...prev, word: e.target.value }))}
+                placeholder="Enter word"
+                className="border p-2 rounded"
+              />
+              <input
+                type="text"
+                value={newWord.reading}
+                onChange={(e) => setNewWord(prev => ({ ...prev, reading: e.target.value }))}
+                placeholder="Enter reading (hiragana/katakana)"
+                className="border p-2 rounded"
+              />
+              <input
+                type="text"
+                value={newWord.meaning}
+                onChange={(e) => setNewWord(prev => ({ ...prev, meaning: e.target.value }))}
+                placeholder="Enter meaning"
+                className="border p-2 rounded"
               />
               <button
-                onClick={handleAddVocab}
-                className="vocab-add-button bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors"
+                onClick={handleAddWord}
+                className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors"
               >
-                Add
+                Add Word
               </button>
             </div>
           </div>
 
-          <div className="vocab-list-card mt-6 p-6 bg-white shadow-md rounded-lg border border-gray-200 max-w-md w-full flex flex-col items-center">
-            <h2 className="text-2xl font-semibold mb-4">Your Vocabulary</h2>
-            {vocabList.length > 0 ? (
+          <div className="word-list-card mt-6 p-6 bg-white shadow-md rounded-lg border border-gray-200 max-w-md w-full flex flex-col items-center">
+            <h2 className="text-2xl font-semibold mb-4">Your Words</h2>
+            {wordList.length > 0 ? (
               <ul className="w-full max-w-sm">
-                {vocabList.map((vocab) => (
+                {wordList.map((word) => (
                   <li
-                    key={vocab.id}
-                    className="vocab-item flex justify-between items-center border-b py-2 px-4 hover:bg-gray-100 transition-colors rounded"
+                    key={word.id}
+                    className="word-item flex justify-between items-center border-b py-2 px-4 hover:bg-gray-100 transition-colors rounded"
                   >
-                    <span className="text-lg">{vocab.word}</span>
-                    {token && (
-                      <button
-                        onClick={() => handleDeleteVocab(vocab.id)}
-                        className="vocab-delete-button text-red-500 hover:text-red-700 transition-colors"
-                      >
-                        Delete
-                      </button>
-                    )}
+                    <div>
+                      <span className="text-lg font-bold">{word.word}</span>
+                      <span className="text-gray-600 ml-2">({word.reading})</span>
+                      <p className="text-sm text-gray-500">{word.meaning}</p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteWord(word.id)}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      Delete
+                    </button>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-500">No vocabulary added yet.</p>
+              <p className="text-gray-500">No words added yet.</p>
             )}
           </div>
         </>

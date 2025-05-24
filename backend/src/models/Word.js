@@ -1,6 +1,7 @@
 const pool = require('../config/db');
 const JishoAPI = require('unofficial-jisho-api');
 const jisho = new JishoAPI();
+const Kanji = require('./Kanji');
 
 /**
  * Word model for vocabulary logging and validation
@@ -15,6 +16,9 @@ class Word {
    */
   static async logWord(wordData) {
     const { word, reading, meaning, kanjiCharacter, userId } = wordData;
+
+    // Ensure kanji exists in database
+    await Kanji.ensureKanjiExists(kanjiCharacter);
 
     // Check if word already exists for this user and kanji
     if (await this.wordExists(userId, word, kanjiCharacter)) {
@@ -228,27 +232,6 @@ class Word {
 
     const result = await pool.query(query, [userId, kanjiCharacter]);
     return parseInt(result.rows[0].count);
-  }
-
-  /**
-   * Get recently logged words by user
-   * Shows latest vocabulary additions for dashboard
-   * @param {number} userId - User ID
-   * @param {number} limit - Number of recent words to return
-   * @returns {Promise<Array>} Array of recent words with kanji info
-   */
-  static async getRecentWords(userId, limit = 5) {
-    const query = `
-      SELECT w.*, k.jlpt_level, k.grade
-      FROM user_kanji_words w
-      JOIN kanji k ON w.kanji_character = k.character
-      WHERE w.user_id = $1
-      ORDER BY w.created_at DESC
-      LIMIT $2
-    `;
-
-    const result = await pool.query(query, [userId, limit]);
-    return result.rows;
   }
 
   /**

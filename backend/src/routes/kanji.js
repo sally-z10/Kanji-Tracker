@@ -2,6 +2,22 @@ const express = require('express');
 const JishoAPI = require('unofficial-jisho-api');
 const router = express.Router();
 const jisho = new JishoAPI();
+const Kanji = require('../models/Kanji');
+
+// Get paginated list of kanji
+router.get('/', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const jlptLevel = req.query.jlpt_level || null;
+
+    const result = await Kanji.getKanjiList(page, limit, jlptLevel);
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching kanji list:', error);
+    res.status(500).json({ error: 'Error fetching kanji list' });
+  }
+});
 
 // Fetch Kanji details for a specific character
 router.get('/:character', async (req, res) => {
