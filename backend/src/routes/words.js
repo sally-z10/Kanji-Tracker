@@ -55,9 +55,9 @@ router.post('/', auth, async (req, res) => {
 router.put('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { reading, meaning } = req.body;
+    const { word, reading, meaning } = req.body;
 
-    const updatedWord = await Word.updateWord(id, req.userId, { reading, meaning });
+    const updatedWord = await Word.updateWord(id, req.userId, { word, reading, meaning });
     if (!updatedWord) {
       return res.status(404).json({ error: 'Word not found' });
     }

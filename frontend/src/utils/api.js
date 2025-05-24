@@ -62,8 +62,8 @@ export const addWord = (token, word, kanjiCharacter) => {
   }, token);
 };
 
-export const updateWord = (token, id, reading, meaning) =>
-  apiRequest(`/api/words/${id}`, 'PUT', { reading, meaning }, token);
+export const updateWord = (token, id, wordData) =>
+  apiRequest(`/api/words/${id}`, 'PUT', wordData, token);
 
 export const deleteWord = (token, id) =>
   apiRequest(`/api/words/${id}`, 'DELETE', null, token);

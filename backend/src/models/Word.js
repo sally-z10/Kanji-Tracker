@@ -176,14 +176,11 @@ class Word {
       throw new Error('Word not found or unauthorized');
     }
 
-    // If word or reading is being updated, validate with Jisho
-    if (word || reading) {
-      const validation = await this.validateWordWithJisho(
-        word || ownershipCheck.rows[0].word,
-        reading || ownershipCheck.rows[0].reading
-      );
+    // If word is being updated, validate with Jisho
+    if (word) {
+      const validation = await this.validateWordWithJisho(word, '');
       if (!validation.isValid) {
-        throw new Error('Invalid word or reading');
+        throw new Error('Invalid Japanese word. Please check the spelling.');
       }
     }
 
