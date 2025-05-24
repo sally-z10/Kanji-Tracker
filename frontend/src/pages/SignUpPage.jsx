@@ -23,44 +23,50 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <form onSubmit={handleSignup} className="bg-white p-6 rounded shadow-md">
-        <h2 className="text-2xl mb-4">Sign Up</h2>
+    <div className="signup-page">
+      <div className="signup-header">
+        <h1>Hello, there!</h1>
+        <p>Please sign up to create an account</p>
+      </div>
+      <div className="signup-section">
+      <form onSubmit={handleSignup} className="">
+        <h2>Sign Up</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
-        <div className="mb-4">
-          <label className="block mb-1">Email</label>
+        <div>
+          <label>Email: </label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border p-2 w-full"
             required
           />
         </div>
-        <div className="mb-4">
-          <label className="block mb-1">Username</label>
+        <div>
+          <label>Username: </label>
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="border p-2 w-full"
             required
           />
         </div>
-        <div className="mb-4">
-          <label className="block mb-1">Password</label>
+        <div>
+          <label>Password: </label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="border p-2 w-full"
             required
           />
         </div>
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded w-full">
+        <button type="submit">
           Sign Up
         </button>
       </form>
+    </div>
+      <div className="login-link">
+        <p>Already have an account? <a href="/login">Login</a></p>
+      </div>
     </div>
   );
 };

@@ -51,15 +51,10 @@ const App = () => {
           <button className="hamburger-menu" onClick={toggleSidebar}>
             ☰
           </button>
-          <div className="search-bar">
-            <input type="text" placeholder="Search Kanji..." />
-            <button>Search</button>
-          </div>
+          <h1 className="header-text">Kanji Tracker</h1>
           {user && (
             <div className="header-controls">
-              <div className="login-indicator">
-                <span className="arrow">➤</span>
-              </div>
+              <span className="user-greeting">Welcome, {user.username}!</span>
               <button className="logout-button" onClick={handleLogout}>
                 Logout
               </button>
@@ -80,7 +75,7 @@ const App = () => {
                 <Link to="/howtouse" className="block py-2 px-4 hover:bg-gray-700" onClick={toggleSidebar}>How to Use</Link>
                 <button
                   onClick={() => { handleLogout(); toggleSidebar(); }}
-                  className="block w-full text-left py-2 px-4 hover:bg-gray-700"
+                  className="logout-button"
                 >
                   Logout
                 </button>

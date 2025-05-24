@@ -21,34 +21,41 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
+    <div className="login-page">
+      <div className="login-header">
+        <h1>Welcome Back!</h1>
+        <p>Please log in to continue</p>
+      </div>
+    <div className="login-section">
       <form onSubmit={handleLogin} className="bg-white p-6 rounded shadow-md">
         <h2 className="text-2xl mb-4">Login</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
-        <div className="mb-4">
-          <label className="block mb-1">Email</label>
+        <div>
+          <label>Email: </label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border p-2 w-full"
             required
           />
         </div>
-        <div className="mb-4">
-          <label className="block mb-1">Password</label>
+        <div>
+          <label>Password: </label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="border p-2 w-full"
             required
           />
         </div>
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded w-full">
+        <button type="submit">
           Login
         </button>
       </form>
+    </div>
+      <div className="signup-link">
+        <p>Don't have an account? <a href="/signup">Sign up</a></p>
+      </div>
     </div>
   );
 };
