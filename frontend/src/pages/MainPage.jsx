@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { searchKanji } from '../utils/api';
+import { searchKanji, getKanjiProgress, getWordProgress } from '../utils/api';
 
 const MainPage = () => {
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [kanjiList, setKanjiList] = useState([]);
   const [error, setError] = useState(null);
+  const [progress, setProgress] = useState({ kanjiProgress: 0, wordProgress: 0 });
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,
@@ -38,7 +39,27 @@ const MainPage = () => {
       }
     };
 
+    const fetchProgress = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const [kanjiData, wordData] = await Promise.all([
+          getKanjiProgress(token),
+          getWordProgress(token)
+        ]);
+
+        setProgress({
+          kanjiProgress: kanjiData.total_kanji || 0,
+          wordProgress: wordData.total_words || 0
+        });
+      } catch (error) {
+        console.error('Error fetching progress:', error);
+      }
+    };
+
     fetchKanji();
+    fetchProgress();
   }, [pagination.page, pagination.limit]);
 
   const handleSearch = async () => {
@@ -71,6 +92,19 @@ const MainPage = () => {
   return (
     <div className="p-4">
       <h1 className="text-3xl font-bold mb-4">Kanji Tracker</h1>
+      
+      {/* Progress Stats */}
+      <div className="mb-8 grid grid-cols-2 gap-4 max-w-2xl mx-auto">
+        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center">
+          <h2 className="text-2xl font-semibold text-gray-600 mb-2">Kanji Learned</h2>
+          <p className="text-4xl font-bold text-indigo-600">{progress.kanjiProgress}</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center">
+          <h2 className="text-2xl font-semibold text-gray-600 mb-2">Words Added</h2>
+          <p className="text-4xl font-bold text-indigo-600">{progress.wordProgress}</p>
+        </div>
+      </div>
+
       <div className="mb-4">
         <input
           type="text"

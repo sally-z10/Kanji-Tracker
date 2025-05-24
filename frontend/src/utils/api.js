@@ -76,3 +76,9 @@ export const getKanji = (character) =>
 
 export const searchKanji = (query) =>
   apiRequest(`/api/kanji/search/${query}`);
+
+export const getKanjiProgress = (token) =>
+  apiRequest('/api/progress/kanji', 'GET', null, token);
+
+export const getWordProgress = (token) =>
+  apiRequest('/api/progress/words', 'GET', null, token);
