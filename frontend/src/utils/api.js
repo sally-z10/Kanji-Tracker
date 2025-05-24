@@ -17,8 +17,17 @@ const apiRequest = async (endpoint, method = 'GET', body = null, token = null) =
   }
 };
 
-export const signup = (username, password, name) =>
-  apiRequest('/auth/signup', 'POST', { username, password, name });
+export const signup = async (email, username, password) => {
+  try {
+    console.log('Attempting signup with:', { email, username });
+    const response = await apiRequest('/api/auth/register', 'POST', { email, username, password });
+    console.log('Signup response:', response);
+    return response;
+  } catch (error) {
+    console.error('Signup error:', error);
+    throw error;
+  }
+};
 
 export const login = (email, password) =>
   apiRequest('/api/auth/login', 'POST', { email, password });
