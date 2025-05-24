@@ -50,7 +50,7 @@ const MainPage = () => {
         ]);
 
         setProgress({
-          kanjiProgress: kanjiData.total_kanji || 0,
+          kanjiProgress: kanjiData.completed || 0,
           wordProgress: wordData.total_words || 0
         });
       } catch (error) {
