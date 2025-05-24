@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { login } from '../utils/api';
 
 const LoginPage = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -11,11 +11,12 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const { token } = await login(username, password);
-      localStorage.setItem('token', token); // Store token in localStorage
-      navigate('/');
+      const response = await login(email, password);
+      localStorage.setItem('token', response.token);
+      // Force a page reload to update the user state
+      window.location.href = '/';
     } catch (err) {
-      setError('Invalid username or password');
+      setError('Invalid email or password');
     }
   };
 
@@ -25,11 +26,11 @@ const LoginPage = () => {
         <h2 className="text-2xl mb-4">Login</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <div className="mb-4">
-          <label className="block mb-1">Username</label>
+          <label className="block mb-1">Email</label>
           <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="border p-2 w-full"
             required
           />

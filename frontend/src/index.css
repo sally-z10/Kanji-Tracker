@@ -21,15 +21,10 @@ body {
 
 .header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
-  background-color: #f0f0f0;
-  height: 10vh;
-  position: fixed;
-  width: 100%;
-  top: 0;
-  z-index: 100;
+  padding: 1rem;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .hamburger-menu {
@@ -101,11 +96,10 @@ body {
 
 /* Search Bar */
 .search-bar {
-  flex-grow: 1;
-  margin: 0 20px;
-  max-width: 60%;
   display: flex;
   align-items: center;
+  margin: 0 1rem;
+  flex-grow: 1;
 }
 
 .search-bar input {
@@ -722,4 +716,67 @@ body {
   .kanji-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.user-info {
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  margin-right: 1rem;
+}
+
+.username {
+  font-weight: 500;
+  color: #333;
+}
+
+.login-indicator {
+  margin-left: auto;
+  margin-right: 1rem;
+  padding: 0.5rem;
+}
+
+.arrow {
+  font-size: 2rem;
+  color: #22c55e; /* green-500 */
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  gap: 1rem;
+}
+
+.logout-button {
+  padding: 0.5rem 1rem;
+  background-color: #ef4444; /* red-500 */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+  background-color: #dc2626; /* red-600 */
+}
+
+.login-indicator {
+  padding: 0.5rem;
 }

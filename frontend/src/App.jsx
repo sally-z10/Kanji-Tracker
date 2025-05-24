@@ -15,10 +15,13 @@ const App = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    console.log('Initial token check:', token);
     if (token) {
       const fetchUser = async () => {
         try {
+          console.log('Fetching user data with token:', token);
           const userData = await getUser(token);
+          console.log('User data received:', userData);
           setUser(userData);
         } catch (error) {
           console.error('Error fetching user:', error);
@@ -31,8 +34,10 @@ const App = () => {
   }, []);
 
   const handleLogout = () => {
+    console.log('Logging out...');
     localStorage.removeItem('token');
     setUser(null);
+    console.log('Logout complete, user state:', null);
   };
 
   const toggleSidebar = () => {
@@ -50,6 +55,16 @@ const App = () => {
             <input type="text" placeholder="Search Kanji..." />
             <button>Search</button>
           </div>
+          {user && (
+            <div className="header-controls">
+              <div className="login-indicator">
+                <span className="arrow">➤</span>
+              </div>
+              <button className="logout-button" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
+          )}
         </header>
         <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
           <button className="close-button" onClick={toggleSidebar}>
