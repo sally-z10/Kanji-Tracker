@@ -5,6 +5,7 @@ import { getUser, updateUser } from '../utils/api';
 const ProfilePage = () => {
   const [user, setUser] = useState(null);
   const [profilePictureUrl, setProfilePictureUrl] = useState('');
+  const [username, setUsername] = useState(''); // New state for editing username
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
 
@@ -16,6 +17,7 @@ const ProfilePage = () => {
           const userData = await getUser(token);
           setUser(userData);
           setProfilePictureUrl(userData.profilePictureUrl || '');
+          setUsername(userData.username || ''); // Initialize username state
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -23,12 +25,15 @@ const ProfilePage = () => {
     };
     fetchUserData();
   }, []);
+  
 
   const handleUpdateProfile = async () => {
     try {
       const token = localStorage.getItem('token');
       if (token && user) {
-        await updateUser(token, { ...user, profilePictureUrl });
+        // Update user with both profile picture and username
+        const updatedUser = await updateUser(token, { ...user, profilePictureUrl, username });
+        setUser(updatedUser); // Update local user state with the response
         setIsEditing(false);
         alert('Profile updated successfully!');
       }
@@ -38,67 +43,65 @@ const ProfilePage = () => {
     }
   };
 
-  if (!user) return <p>Loading...</p>;
+  if (!user) return <p className="loading-text">Loading...</p>;
 
   return (
     <div className="profile-page">
       <div className="profile-header">
         <Link to="/">
-          <button className="mb-4 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Back</button>
+          <button className="back-button">Back</button>
         </Link>
-        <h1 className="text-3xl font-bold mb-6">Profile</h1>
+        <h1 className="profile-heading">Profile</h1>
       </div>
-      <div className="profile-info flex flex-col items-center">
-        <div className="profile-card p-6 bg-white shadow-md rounded-lg border border-gray-200 max-w-md w-full">
+      <div className="profile-info">
+        <div className="profile-card">
           {profilePictureUrl ? (
             <img
               src={profilePictureUrl}
               alt="Profile"
-              className="profile-picture mb-4"
+              className="profile-picture"
               onError={(e) => {
                 e.target.src = 'https://via.placeholder.com/100'; // Fallback image
               }}
             />
           ) : (
-            <div className="profile-picture-placeholder mb-4">No Image</div>
+            <div className="profile-picture-placeholder">No Image</div>
           )}
-          <p className="text-lg"><strong>Username:</strong> {user.username}</p>
-          <p className="text-lg"><strong>Name:</strong> {user.name || 'Not set'}</p>
-          <div className="mt-4">
-            <h2 className="text-xl font-semibold mb-2">Stats</h2>
-            <p className="text-lg">Kanji Learned: {user.kanjiLearned || 0}</p>
-            <p className="text-lg">Words Added: {user.wordsAdded || 0}</p>
-          </div>
           {isEditing ? (
-            <div className="mt-4 flex flex-col items-center">
+            <>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter username"
+                className="profile-input profile-username-input"
+              />
               <input
                 type="text"
                 value={profilePictureUrl}
                 onChange={(e) => setProfilePictureUrl(e.target.value)}
                 placeholder="Profile picture URL"
-                className="border p-2 rounded mb-2 w-full max-w-xs"
+                className="profile-input profile-picture-input"
               />
-              <div className="flex space-x-2">
-                <button
-                  onClick={handleUpdateProfile}
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  Change Profile
-                </button>
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                  Cancel
-                </button>
-              </div>
+            </>
+          ) : (
+            <>
+              <p className="profile-detail"><strong>Username:</strong> {user.username}</p>
+              <p className="profile-detail"><strong>Email:</strong> {user.email || 'Not set'}</p>
+            </>
+          )}
+          {isEditing ? (
+            <div className="profile-actions">
+              <button onClick={handleUpdateProfile} className="save-button">
+                Save Changes
+              </button>
+              <button onClick={() => setIsEditing(false)} className="cancel-button">
+                Cancel
+              </button>
             </div>
           ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Change Profile
+            <button onClick={() => setIsEditing(true)} className="edit-button">
+              Edit Profile
             </button>
           )}
         </div>
