@@ -12,13 +12,14 @@ CREATE TABLE users (
 );
 
 -- Kanji table
-CREATE TABLE kanji (
-    character VARCHAR(1) PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS kanji (
+    id SERIAL PRIMARY KEY,
+    character VARCHAR(2) UNIQUE NOT NULL,
     onyomi TEXT[],
     kunyomi TEXT[],
     meanings TEXT[],
     stroke_count INTEGER,
-    jlpt_level VARCHAR(2),
+    jlpt_level VARCHAR(10),
     grade VARCHAR(10),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
