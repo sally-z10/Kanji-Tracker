@@ -36,25 +36,43 @@ export const getUser = (token) =>
   apiRequest('/api/profile', 'GET', null, token);
 
 export const updateUser = (token, name, profilePicture) =>
-  apiRequest('/profile', 'PUT', { name, profilePicture }, token);
+  apiRequest('/api/profile', 'PUT', { name, profilePicture }, token);
 
 export const getWords = (token, page = 1, limit = 10) =>
-  apiRequest(`/words?page=${page}&limit=${limit}`, 'GET', null, token);
+  apiRequest(`/api/words?page=${page}&limit=${limit}`, 'GET', null, token);
 
-export const addWord = (token, word, reading, meaning, kanjiCharacter) =>
-  apiRequest('/words', 'POST', { word, reading, meaning, kanjiCharacter }, token);
+const validateWord = async (word) => {
+  try {
+    const response = await fetch(`https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(word)}`);
+    const data = await response.json();
+    return data.data.length > 0 && data.data[0].japanese.some(j => j.word === word);
+  } catch (error) {
+    console.error('Error validating word:', error);
+    return false;
+  }
+};
+
+export const addWord = (token, word, kanjiCharacter) => {
+  console.log('API: Adding word:', { word, kanjiCharacter });
+  return apiRequest('/api/words', 'POST', { 
+    word, 
+    kanjiCharacter,
+    reading: '',  // Send empty string for reading
+    meaning: []   // Send empty array for meaning
+  }, token);
+};
 
 export const updateWord = (token, id, reading, meaning) =>
-  apiRequest(`/words/${id}`, 'PUT', { reading, meaning }, token);
+  apiRequest(`/api/words/${id}`, 'PUT', { reading, meaning }, token);
 
 export const deleteWord = (token, id) =>
-  apiRequest(`/words/${id}`, 'DELETE', null, token);
+  apiRequest(`/api/words/${id}`, 'DELETE', null, token);
 
 export const getWordsForKanji = (token, character) =>
-  apiRequest(`/words/kanji/${character}`, 'GET', null, token);
+  apiRequest(`/api/words/kanji/${character}`, 'GET', null, token);
 
 export const getKanji = (character) =>
-  apiRequest(`/kanji/${character}`);
+  apiRequest(`/api/kanji/${character}`);
 
 export const searchKanji = (query) =>
-  apiRequest(`/kanji/search/${query}`);
+  apiRequest(`/api/kanji/search/${query}`);

@@ -31,8 +31,8 @@ CREATE TABLE user_kanji_words (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     kanji_character VARCHAR(1) NOT NULL REFERENCES kanji(character) ON DELETE CASCADE,
     word VARCHAR(255) NOT NULL,
-    reading VARCHAR(255) NOT NULL,
-    meaning TEXT[] NOT NULL,
+    reading VARCHAR(255),
+    meaning TEXT[],
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, word)

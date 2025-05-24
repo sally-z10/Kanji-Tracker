@@ -18,21 +18,10 @@ router.get('/', auth, async (req, res) => {
 // Log new word
 router.post('/', auth, async (req, res) => {
   try {
-    const { word, reading, meaning, kanjiCharacter } = req.body;
+    const { word, kanjiCharacter } = req.body;
     
-    console.log('Received word data:', { word, reading, meaning, kanjiCharacter });
+    console.log('Received word data:', { word, kanjiCharacter });
     
-    // Validate word with Jisho API
-    const validation = await Word.validateWordWithJisho(word, reading);
-    console.log('Jisho validation result:', validation);
-    
-    if (!validation.isValid) {
-      return res.status(400).json({ 
-        error: 'Invalid word or reading',
-        suggestions: validation.suggestions
-      });
-    }
-
     // Check for duplicates
     const isDuplicate = await Word.wordExists(req.userId, word, kanjiCharacter);
     console.log('Duplicate check result:', isDuplicate);
@@ -44,8 +33,6 @@ router.post('/', auth, async (req, res) => {
     const wordData = {
       userId: req.userId,
       word,
-      reading,
-      meaning,
       kanjiCharacter
     };
     console.log('Attempting to log word with data:', wordData);

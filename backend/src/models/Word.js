@@ -15,42 +15,37 @@ class Word {
    * @returns {Promise<Object>} Created word object with validation status
    */
   static async logWord(wordData) {
-    const { word, reading, meaning, kanjiCharacter, userId } = wordData;
+    const { word, kanjiCharacter, userId } = wordData;
 
     // Ensure kanji exists in database
     await Kanji.ensureKanjiExists(kanjiCharacter);
+
+    // Validate word against Jisho API
+    const validation = await this.validateWordWithJisho(word, '');
+    if (!validation.isValid) {
+      throw new Error('Invalid Japanese word. Please check the spelling.');
+    }
 
     // Check if word already exists for this user and kanji
     if (await this.wordExists(userId, word, kanjiCharacter)) {
       throw new Error('Word already exists for this kanji');
     }
 
-    // Validate word with Jisho API
-    const validation = await this.validateWordWithJisho(word, reading);
-    if (!validation.isValid) {
-      throw new Error('Invalid word or reading');
-    }
-
     const query = `
       INSERT INTO user_kanji_words (
-        user_id, kanji_character, word, reading, meaning, created_at
+        user_id, kanji_character, word, created_at
       )
-      VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+      VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
       RETURNING *
     `;
 
     const result = await pool.query(query, [
       userId,
       kanjiCharacter,
-      word,
-      reading,
-      meaning
+      word
     ]);
 
-    return {
-      ...result.rows[0],
-      validation
-    };
+    return result.rows[0];
   }
 
   /**
@@ -123,9 +118,24 @@ class Word {
         };
       }
 
+      // If no reading is provided, just check if the word exists
+      if (!reading) {
+        const wordExists = result.data.some(item => 
+          item.japanese.some(j => j.word === word)
+        );
+        return {
+          isValid: wordExists,
+          suggestions: result.data.slice(0, 3).map(item => ({
+            word: item.japanese[0]?.word,
+            reading: item.japanese[0]?.reading,
+            meanings: item.senses[0]?.english_definitions
+          }))
+        };
+      }
+
+      // If reading is provided, check for exact match
       const exactMatch = result.data.find(item => 
-        item.japanese[0]?.word === word && 
-        item.japanese[0]?.reading === reading
+        item.japanese.some(j => j.word === word && j.reading === reading)
       );
 
       return {

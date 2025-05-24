@@ -6,7 +6,7 @@ const KanjiDetailPage = () => {
   const { kanji } = useParams();
   const [kanjiData, setKanjiData] = useState(null);
   const [error, setError] = useState(null);
-  const [newWord, setNewWord] = useState({ word: '', reading: '', meaning: '' });
+  const [newWord, setNewWord] = useState('');
   const [wordList, setWordList] = useState([]);
   const token = localStorage.getItem('token');
 
@@ -39,23 +39,50 @@ const KanjiDetailPage = () => {
     fetchWordList();
   }, [kanji, token]);
 
-  const handleAddWord = async () => {
-    if (!newWord.word.trim() || !newWord.reading.trim() || !newWord.meaning.trim()) return;
+  const handleAddWord = async (e) => {
+    e.preventDefault();
+    if (!newWord.trim()) return;
+
     try {
-      const addedWord = await addWord(token, newWord.word, newWord.reading, newWord.meaning, kanji);
-      setWordList([...wordList, addedWord]);
-      setNewWord({ word: '', reading: '', meaning: '' });
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      console.log('Adding word:', newWord);
+      const response = await addWord(token, newWord, kanji);
+      console.log('Word added successfully:', response);
+      
+      // Update the words list with the new word
+      setWordList(prevWords => [...prevWords, response]);
+      setNewWord(''); // Clear the input
     } catch (error) {
       console.error('Error adding word:', error);
+      console.error('Error details:', error.message, error.stack);
+      // Show a more specific error message
+      if (error.message.includes('Invalid Japanese word')) {
+        alert('This word was not found in the dictionary. Please check the spelling and try again.');
+      } else {
+        alert('Failed to add word. Please try again.');
+      }
     }
   };
 
   const handleDeleteWord = async (id) => {
+    if (!token) {
+      console.error('No authentication token found');
+      return;
+    }
     try {
+      console.log('Deleting word:', id);
       await deleteWord(token, id);
-      setWordList(wordList.filter((word) => word.id !== id));
+      console.log('Word deleted successfully');
+      // Update the word list by filtering out the deleted word
+      setWordList(prevWords => prevWords.filter(word => word.id !== id));
     } catch (error) {
       console.error('Error deleting word:', error);
+      console.error('Error details:', error.message, error.stack);
+      alert('Failed to delete word. Please try again.');
     }
   };
 
@@ -83,65 +110,45 @@ const KanjiDetailPage = () => {
 
       {token && (
         <>
-          <div className="word-add-card mt-6 p-6 bg-white shadow-md rounded-lg border border-gray-200 max-w-md w-full flex flex-col items-center">
-            <h2 className="text-2xl font-semibold mb-4">Add Word</h2>
-            <div className="flex flex-col w-full max-w-sm gap-2">
+          <form onSubmit={handleAddWord} className="mb-8">
+            <div className="flex gap-4">
               <input
                 type="text"
-                value={newWord.word}
-                onChange={(e) => setNewWord(prev => ({ ...prev, word: e.target.value }))}
-                placeholder="Enter word"
-                className="border p-2 rounded"
+                value={newWord}
+                onChange={(e) => setNewWord(e.target.value)}
+                placeholder="Enter a word containing this kanji"
+                className="flex-1 p-2 border rounded"
               />
-              <input
-                type="text"
-                value={newWord.reading}
-                onChange={(e) => setNewWord(prev => ({ ...prev, reading: e.target.value }))}
-                placeholder="Enter reading (hiragana/katakana)"
-                className="border p-2 rounded"
-              />
-              <input
-                type="text"
-                value={newWord.meaning}
-                onChange={(e) => setNewWord(prev => ({ ...prev, meaning: e.target.value }))}
-                placeholder="Enter meaning"
-                className="border p-2 rounded"
-              />
-              <button
-                onClick={handleAddWord}
-                className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors"
+              <button 
+                type="submit"
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
                 Add Word
               </button>
             </div>
-          </div>
+          </form>
 
-          <div className="word-list-card mt-6 p-6 bg-white shadow-md rounded-lg border border-gray-200 max-w-md w-full flex flex-col items-center">
-            <h2 className="text-2xl font-semibold mb-4">Your Words</h2>
-            {wordList.length > 0 ? (
-              <ul className="w-full max-w-sm">
-                {wordList.map((word) => (
-                  <li
-                    key={word.id}
-                    className="word-item flex justify-between items-center border-b py-2 px-4 hover:bg-gray-100 transition-colors rounded"
-                  >
-                    <div>
-                      <span className="text-lg font-bold">{word.word}</span>
-                      <span className="text-gray-600 ml-2">({word.reading})</span>
-                      <p className="text-sm text-gray-500">{word.meaning}</p>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteWord(word.id)}
-                      className="text-red-500 hover:text-red-700 transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500">No words added yet.</p>
-            )}
+          <div className="space-y-4 w-full max-w-md">
+            {wordList.map((word) => (
+              <div key={word.id} className="flex items-center justify-between p-4 bg-white rounded shadow">
+                <div className="flex-1">
+                  <div className="text-lg font-medium">{word.word}</div>
+                  {word.reading && <div className="text-gray-600">{word.reading}</div>}
+                  {word.meaning && word.meaning.length > 0 && (
+                    <div className="text-gray-600">{word.meaning.join(', ')}</div>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleDeleteWord(word.id)}
+                  className="ml-4 p-2 text-red-500 hover:text-red-700 focus:outline-none"
+                  title="Delete word"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            ))}
           </div>
         </>
       )}
