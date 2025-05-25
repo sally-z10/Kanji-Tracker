@@ -29,17 +29,17 @@ A web application designed to help Japanese language learners track their kanji 
 ## Technology Stack
 
 ### Frontend
-- React 18
-- Vite
-- React Router
-- Tailwind CSS
-- Context API for state management
+- React 19 with React Router 7
+- Vite 6 for development and building
+- ESLint for code quality
+- React Hooks for state management
 
 ### Backend
-- Node.js with Express
-- PostgreSQL database
-- Jisho API integration for kanji and word validation
-- JWT authentication
+- Node.js with Express 4
+- PostgreSQL with node-postgres
+- JWT for authentication
+- Jisho API integration for kanji validation
+- Jest for testing
 
 ## Getting Started
 
